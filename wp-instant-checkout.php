@@ -20,6 +20,31 @@ class WC_Buy_Now_Popup
         add_action('wp_ajax_nopriv_wc_buy_now', [$this, 'handle_buy_now']);
     }
 
+    public function wc_buy_now_ajax_handler()
+    {
+        $product_id = intval($_POST['product_id']);
+
+        if ($product_id) {
+            if (null === WC()->cart) {
+                wc_load_cart();
+            }
+
+            WC()->cart->empty_cart();
+            WC()->cart->add_to_cart($product_id);
+
+            // Get cart review HTML only (the product section)
+            ob_start();
+            woocommerce_checkout_review_order();
+            $cart_html = ob_get_clean();
+
+            wp_send_json_success($cart_html);
+        } else {
+            wp_send_json_error('Invalid product');
+        }
+
+        wp_die();
+    }
+
 
     public function enqueue_scripts()
     {
